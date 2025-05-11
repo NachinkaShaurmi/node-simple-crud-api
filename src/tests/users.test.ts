@@ -1,5 +1,6 @@
 import request from 'supertest';
 import server from '../server';
+import { IUser } from '../api/user/types';
 
 describe('Users API', () => {
   let userId: string;
@@ -8,6 +9,11 @@ describe('Users API', () => {
     username: 'John Doe',
     age: 30,
     hobbies: ['reading', 'gaming'],
+  };
+
+  const createUser = async (user: Omit<IUser, 'id'>) => {
+    const res = await request(server).post('/api/users').send(user);
+    return res.body.id;
   };
 
   beforeEach(async () => {
@@ -90,5 +96,16 @@ describe('Users API', () => {
     const res = await request(server).get('/api/nonexistent');
     expect(res.status).toBe(404);
     expect(res.body).toEqual({ status: 'error', message: 'Not Found' });
+  });
+
+  test('Scenario 5: Multiple users handling', async () => {
+    const user1Id = await createUser({ ...validUser, username: 'User 1' });
+    const user2Id = await createUser({ ...validUser, username: 'User 2' });
+
+    const res = await request(server).get('/api/users');
+    expect(res.status).toBe(200);
+    expect(res.body.length).toBe(2);
+    expect(res.body).toContainEqual(expect.objectContaining({ id: user1Id, username: 'User 1' }));
+    expect(res.body).toContainEqual(expect.objectContaining({ id: user2Id, username: 'User 2' }));
   });
 });
