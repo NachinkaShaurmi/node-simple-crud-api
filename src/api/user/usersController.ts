@@ -15,7 +15,7 @@ export default async (payload: IPayload, res: ServerResponse) => {
     const users = db.getAll();
 
     res.statusCode = 200;
-    res.end(JSON.stringify({ status: 'success', data: users }));
+    res.end(JSON.stringify(users));
     return;
   }
 
@@ -30,7 +30,7 @@ export default async (payload: IPayload, res: ServerResponse) => {
 
     if (user) {
       res.statusCode = 200;
-      res.end(JSON.stringify({ status: 'success', data: user }));
+      res.end(JSON.stringify(user));
     } else {
       res.statusCode = 404;
       res.end(JSON.stringify({ status: 'error', message: 'User not found' }));
@@ -47,7 +47,7 @@ export default async (payload: IPayload, res: ServerResponse) => {
 
     const newUser = db.create(body as IUser);
     res.statusCode = 201;
-    res.end(JSON.stringify({ status: 'success', data: newUser }));
+    res.end(JSON.stringify(newUser));
     return;
   }
 
@@ -68,7 +68,7 @@ export default async (payload: IPayload, res: ServerResponse) => {
 
     if (updatedUser) {
       res.statusCode = 200;
-      res.end(JSON.stringify({ status: 'success', data: updatedUser }));
+      res.end(JSON.stringify(updatedUser));
     } else {
       res.statusCode = 404;
       res.end(JSON.stringify({ status: 'error', message: 'User not found' }));
@@ -92,7 +92,7 @@ export default async (payload: IPayload, res: ServerResponse) => {
     const deleted = db.delete(id);
 
     if (deleted) {
-      res.statusCode = 200;
+      res.statusCode = 204;
       res.end(JSON.stringify({ status: 'success', message: 'User deleted successfully' }));
     } else {
       res.statusCode = 404;
