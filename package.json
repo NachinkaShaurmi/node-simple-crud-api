@@ -10,7 +10,6 @@
     "start:prod": "npm run build && node dist/server.js",
     "start:multi": "ts-node src/cluster.ts",
     "format": "prettier --write \"src/**/*.ts\"",
-    "lint": "eslint \"src/**/*.ts\" --fix",
     "test": "jest"
   },
   "repository": {
