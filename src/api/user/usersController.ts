@@ -2,17 +2,21 @@ import { ServerResponse } from 'http';
 import { IPayload, IUser } from './types';
 import InMemoryDb from '../../db/inMemoryDB';
 import { isValidUuid, isValidUser } from '../../utils/validators';
+import { sendToMaster } from '../../ipc/client';
+import cluster from 'cluster';
 
-const db = InMemoryDb.getInstance();
+const isClustered = cluster.isWorker;
 
 export default async (payload: IPayload, res: ServerResponse) => {
-  console.log('Controller called with payload:', payload);
+  const db = InMemoryDb.getInstance();
+
+  console.log('Controller called with payload:', payload, 'isClustered:', isClustered);
 
   res.setHeader('Content-Type', 'application/json');
   const { method, id, body } = payload;
 
   if (method === 'GET' && !id) {
-    const users = db.getAll();
+    const users = isClustered ? await sendToMaster('getAll') : db.getAll();
 
     res.statusCode = 200;
     res.end(JSON.stringify(users));
@@ -26,7 +30,7 @@ export default async (payload: IPayload, res: ServerResponse) => {
       return;
     }
 
-    const user = db.getById(id);
+    const user = isClustered ? await sendToMaster('getById', { id }) : db.getById(id);
 
     if (user) {
       res.statusCode = 200;
@@ -45,7 +49,10 @@ export default async (payload: IPayload, res: ServerResponse) => {
       return;
     }
 
-    const newUser = db.create(body as IUser);
+    const newUser = isClustered
+      ? await sendToMaster('create', { user: body })
+      : db.create(body as IUser);
+
     res.statusCode = 201;
     res.end(JSON.stringify(newUser));
     return;
@@ -64,7 +71,9 @@ export default async (payload: IPayload, res: ServerResponse) => {
       return;
     }
 
-    const updatedUser = db.update(id, body as Partial<IUser>);
+    const updatedUser = isClustered
+      ? await sendToMaster('update', { id, user: body })
+      : db.update(id, body);
 
     if (updatedUser) {
       res.statusCode = 200;
@@ -89,7 +98,7 @@ export default async (payload: IPayload, res: ServerResponse) => {
       return;
     }
 
-    const deleted = db.delete(id);
+    const deleted = isClustered ? await sendToMaster('delete', { id }) : db.delete(id);
 
     if (deleted) {
       res.statusCode = 204;

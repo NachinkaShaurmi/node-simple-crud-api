@@ -5,10 +5,12 @@ import router from './router';
 
 dotenv.config();
 
-const PORT = env.PORT || 4000;
+const PORT = parseInt(env.WORKER_PORT || env.PORT || '4000', 10);
 
-const app = createServer(async (req, res) => {
+const server = createServer(async (req, res) => {
   try {
+    console.log(`Request received on port ${PORT}`);
+
     await router(req, res);
   } catch (error) {
     console.error('Error:', error);
@@ -18,7 +20,7 @@ const app = createServer(async (req, res) => {
   }
 });
 
-const server = app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
